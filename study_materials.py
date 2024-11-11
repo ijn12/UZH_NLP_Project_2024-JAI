@@ -15,7 +15,7 @@ import io
 from datetime import datetime
 
 def generate_study_materials(vectordb, topic: str, client) -> dict:
-    """Generate structured study materials using OpenAI's chat completions"""
+    """Generate structured study materials using OpenAI's chat completions."""
     # Get relevant context from vector database
     context = ""
     if vectordb:
