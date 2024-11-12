@@ -20,6 +20,34 @@ def is_valid_openai_key(api_key: str) -> bool:
     pattern = r'^sk-[A-Za-z0-9_-]+$'
     return bool(re.match(pattern, api_key))
 
+def is_nlp_topic(topic: str) -> bool:
+    """
+    Check if the topic is NLP-related.
+    
+    Args:
+        topic: The topic to validate
+        
+    Returns:
+        Boolean indicating if topic is NLP-related
+    """
+    nlp_topics = {
+        "natural language processing", "nlp", "computational linguistics",
+        "text analysis", "language model", "machine learning", "deep learning",
+        "tokenization", "parsing", "text classification", "named entity recognition",
+        "sentiment analysis", "machine translation", "speech recognition",
+        "text generation", "information extraction", "word embeddings",
+        "language understanding", "text summarization", "question answering",
+        "topic modeling", "text mining", "semantic analysis", "syntactic analysis",
+        "corpus linguistics", "discourse analysis", "morphological analysis",
+        "part of speech tagging", "dependency parsing", "transformer models",
+        "bert", "gpt", "word2vec", "language representation", "text preprocessing",
+        "sequence labeling", "neural networks", "language generation",
+        "text similarity", "document classification", "information retrieval"
+    }
+    
+    topic_lower = topic.lower()
+    return any(t in topic_lower for t in nlp_topics)
+
 def main():
     st.set_page_config(page_title="📑 NLP Learning Plattform", layout="wide")
     initialize_session_state()
@@ -152,10 +180,24 @@ def main():
     
     with tab2:
         # Study material generation interface
-        topic = st.text_input("Enter the topic you want to create materials for:")
+        topic = st.text_input("Enter the NLP-related topic you want to create materials for:")
         if st.button("Generate Materials", type="primary"):
             if not topic:
                 st.warning("Please enter a topic first.")
+            elif not is_nlp_topic(topic):
+                st.error("""
+                The topic you entered doesn't appear to be related to Natural Language Processing (NLP).
+                
+                Please enter a topic related to:
+                - Natural Language Processing concepts
+                - Computational Linguistics
+                - Text Analysis and Processing
+                - Language Models and Understanding
+                - Machine Translation
+                - Speech Recognition
+                - Text Classification
+                - And other NLP-related areas
+                """)
             else:
                 with st.spinner("Generating materials... This might take up to 1 minute. Please be patient 😇"):
                     content = generate_study_materials(vectordb, topic, client)
@@ -174,20 +216,21 @@ def process_uploads(pdf_files):
         for file in pdf_files:
             files.append(file.getvalue())
             filenames.append(file.name)
-            if file.name not in st.session_state.uploaded_filenames:
-                st.session_state.uploaded_filenames.append(file.name)
     
     return files, filenames
 
 def display_upload_status(flagged_files):
     if flagged_files:
-        st.warning("The following files were flagged as non-NLP relevant:")
+        st.warning("The following files were flagged as non-NLP relevant and were not added:")
         for file in flagged_files:
             st.write(file)
     
     st.divider()
     st.subheader("📚 Current Learning Materials")
-    for filename in st.session_state.uploaded_filenames:
+    
+    # Only show files that weren't flagged
+    current_files = set(st.session_state.uploaded_filenames) - set(flagged_files)
+    for filename in current_files:
         st.write(f"- {filename}")
 
 if __name__ == "__main__":
