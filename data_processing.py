@@ -85,9 +85,14 @@ def create_educational_vectordb(files, filenames):
     """
     with st.spinner("Creating vector database for all documents..."):
         try:
-            vectordb, flagged_files = get_chroma_index_for_pdf(files, filenames, os.getenv("OPENAI_API_KEY"), persist_dir)
+            vectordb, flagged_files, successful_files = get_chroma_index_for_pdf(files, filenames, os.getenv("OPENAI_API_KEY"), persist_dir)
             if not vectordb:
                 st.error("Failed to create vector database.")
+            else:
+                # Update session state with successful files
+                for filename in successful_files:
+                    if filename not in st.session_state.uploaded_filenames:
+                        st.session_state.uploaded_filenames.append(filename)
             return vectordb, flagged_files
         except Exception as e:
             st.error(f"Error creating vector database: {e}")
@@ -120,6 +125,7 @@ def get_chroma_index_for_pdf(files, filenames, openai_api_key: str, persist_dire
     
     documents = []
     flagged_files = []
+    successful_files = []
     
     for file, filename in zip(files, filenames):
         try:
@@ -127,6 +133,7 @@ def get_chroma_index_for_pdf(files, filenames, openai_api_key: str, persist_dire
             text_pages = parse_pdf(BytesIO(file), filename)
             if is_nlp_relevant(text_pages):
                 documents.extend(text_to_docs(text_pages, filename))
+                successful_files.append(filename)
             else:
                 flagged_files.append(filename)
         except Exception as e:
@@ -137,7 +144,7 @@ def get_chroma_index_for_pdf(files, filenames, openai_api_key: str, persist_dire
     if documents:
         vectordb.add_documents(documents)
         
-    return vectordb, flagged_files
+    return vectordb, flagged_files, successful_files
 
 def is_nlp_relevant(text_pages: List[Tuple[str, int]]) -> bool:
     """
