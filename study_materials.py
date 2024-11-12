@@ -27,24 +27,27 @@ def generate_study_materials(vectordb, topic: str, client) -> dict:
     messages = [
         {
             "role": "system",
-            "content": "You are an expert educational content creator and professor. Create comprehensive, university-level study materials that thoroughly explore the topic in depth."
+            "content": "You are an expert educational content creator and professor. Your primary task is to analyze the provided reference material and create comprehensive study materials based on it. Focus heavily on incorporating and expanding upon the concepts found in the reference documents."
         },
         {
             "role": "user",
-            "content": f"""Create detailed study materials about {topic}.
-            
-            Use this reference material if available:
+            "content": f"""Based primarily on the following reference material, create detailed study materials about {topic}.
+
+            Reference Material:
             {context}
-            
-            For the study guide:
-            - Provide a comprehensive, in-depth explanation suitable for a university course
-            - Include theoretical foundations and practical applications
-            - Cover historical context and modern developments
-            - Explain core concepts, methodologies, and best practices
-            - Include real-world examples and case studies
-            - Discuss limitations, challenges, and future directions
-            - Add relevant formulas, diagrams, or technical details if applicable
-            
+
+            Important: Your response should be heavily based on and aligned with the concepts and information found in the reference material above. Expand upon these concepts while maintaining accuracy and relevance to the source material.
+
+            Generate a clear, concise title for these study materials that accurately reflects the content.
+
+            Structure the study guide to include content for the following sections:
+            1. Overview and Introduction
+            2. Core Concepts and Fundamentals
+            3. Technical Details and Methodology
+            4. Practical Applications
+            5. Challenges and Limitations
+            6. Future Directions and Trends
+
             Also include 12 flashcards and 4 exercises with detailed solutions."""
         }
     ]
@@ -60,16 +63,19 @@ def generate_study_materials(vectordb, topic: str, client) -> dict:
                     "schema": {
                         "type": "object",
                         "properties": {
+                            "title": {"type": "string"},
                             "study_guide": {
                                 "type": "object",
                                 "properties": {
-                                    "detailed_explanation": {"type": "string"},
-                                    "key_concepts": {
-                                        "type": "array",
-                                        "items": {"type": "string"}
-                                    }
+                                    "overview": {"type": "string"},
+                                    "core_concepts": {"type": "string"},
+                                    "technical_details": {"type": "string"},
+                                    "practical_applications": {"type": "string"},
+                                    "challenges": {"type": "string"},
+                                    "future_directions": {"type": "string"}
                                 },
-                                "required": ["detailed_explanation", "key_concepts"],
+                                "required": ["overview", "core_concepts", "technical_details", 
+                                            "practical_applications", "challenges", "future_directions"],
                                 "additionalProperties": False
                             },
                             "flashcards": {
@@ -97,7 +103,7 @@ def generate_study_materials(vectordb, topic: str, client) -> dict:
                                 }
                             }
                         },
-                        "required": ["study_guide", "flashcards", "exercises"],
+                        "required": ["title", "study_guide", "flashcards", "exercises"],
                         "additionalProperties": False
                     },
                     "strict": True
@@ -111,8 +117,7 @@ def generate_study_materials(vectordb, topic: str, client) -> dict:
         return {
             'title': f"{topic} Study Guide",
             'subtitle': f"Generated on {datetime.now().strftime('%B %d, %Y at %H:%M')}",
-            'main_content': generated_content['study_guide']['detailed_explanation'],
-            'sidebar_content': "\n".join(generated_content['study_guide']['key_concepts']),
+            'study_guide': generated_content['study_guide'],
             'flashcards': generated_content['flashcards'][:12],
             'exercises': generated_content['exercises'][:4]
         }
@@ -203,31 +208,55 @@ def get_download_link(file_content, filename, display_text):
     return f'<a href="data:application/octet-stream;base64,{b64}" download="{filename}" class="download-button">{display_text}</a>'
 
 def display_preview(content):
-    """Display preview of generated content"""
+    """Display preview of generated content in Streamlit UI"""
     with st.expander("👀 Preview Generated Content"):
-        st.subheader("Study Guide")
-        st.write(content['main_content'])
+        # Display title and subtitle
+        st.title(content['title'])
+        st.write(content['subtitle'])
         
-        st.subheader("Key Concepts")
-        st.write(content['sidebar_content'])
+        # Display study guide sections
+        st.header("Study Guide")
         
-        st.subheader("Flashcards")
-        for i, card in enumerate(content['flashcards'], 1):
-            st.markdown(f"**Card {i}**")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("**Front:**")
+        # Overview and Introduction
+        st.subheader("Overview and Introduction")
+        st.write(content['study_guide']['overview'])
+        
+        # Core Concepts
+        st.subheader("Core Concepts and Fundamentals")
+        st.write(content['study_guide']['core_concepts'])
+        
+        # Technical Details
+        st.subheader("Technical Details and Methodology")
+        st.write(content['study_guide']['technical_details'])
+        
+        # Practical Applications
+        st.subheader("Practical Applications")
+        st.write(content['study_guide']['practical_applications'])
+        
+        # Challenges
+        st.subheader("Challenges and Limitations")
+        st.write(content['study_guide']['challenges'])
+        
+        # Future Directions
+        st.subheader("Future Directions and Trends")
+        st.write(content['study_guide']['future_directions'])
+        
+        # Display flashcards
+        if content.get('flashcards'):
+            st.header("Flashcards")
+            for i, card in enumerate(content['flashcards'], 1):
+                st.subheader(f"Card {i}")
+                st.write("**Question:**")
                 st.write(card['front'])
-            with col2:
-                st.markdown("**Back:**")
+                st.write("**Answer:**")
                 st.write(card['back'])
-            st.divider()
         
-        st.subheader("Exercises")
-        for i, exercise in enumerate(content['exercises'], 1):
-            st.markdown(f"**Exercise {i}**")
-            st.markdown("**Question:**")
-            st.write(exercise['question'])
-            st.markdown("**Solution:**")
-            st.write(exercise['solution'])
-            st.divider()
+        # Display exercises
+        if content.get('exercises'):
+            st.header("Practice Exercises")
+            for i, exercise in enumerate(content['exercises'], 1):
+                st.subheader(f"Exercise {i}")
+                st.write("**Question:**")
+                st.write(exercise['question'])
+                st.write("**Solution:**")
+                st.write(exercise['solution'])
