@@ -54,6 +54,8 @@ def main():
         st.stop()
     
     try:
+        #Set the environment variable for API key
+        os.environ["OPENAI_API_KEY"] = api_key_input
         # Test the API key with a minimal API call
         client = OpenAI(api_key=api_key_input)
         client.models.list()  # This will fail fast if the key is invalid
