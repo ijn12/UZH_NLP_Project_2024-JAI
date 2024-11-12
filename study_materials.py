@@ -6,12 +6,7 @@ import csv
 import genanki
 import random
 from pdf_generator import generate_pdf
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.probability import FreqDist
-from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-import io
 from datetime import datetime
 
 def generate_study_materials(vectordb, topic: str, client) -> dict:

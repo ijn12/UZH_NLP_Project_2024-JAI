@@ -1,7 +1,13 @@
 @echo off
 echo Installing required packages...
-python -m pip install --upgrade pip
-python -m pip install -e . || (
+python -m pip install --upgrade pip || (
+    echo Error upgrading pip!
+    pause
+    exit /b 1
+)
+
+echo Installing dependencies from requirements.txt...
+python -m pip install -r requirements.txt || (
     echo Error installing packages!
     pause
     exit /b 1
