@@ -1,5 +1,24 @@
 @echo off
-echo Installing required packages...
+setlocal
+
+echo Enter the path to your Python installation (e.g., C:\Python39\python.exe):
+set /p python_path=
+
+echo Creating virtual environment in the 'venv' folder...
+%python_path% -m venv venv || (
+    echo Error creating virtual environment!
+    pause
+    exit /b 1
+)
+
+echo Activating virtual environment...
+call venv\Scripts\activate || (
+    echo Error activating virtual environment!
+    pause
+    exit /b 1
+)
+
+echo Upgrading pip...
 python -m pip install --upgrade pip || (
     echo Error upgrading pip!
     pause
@@ -27,4 +46,5 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+
 pause
