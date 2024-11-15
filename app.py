@@ -1,10 +1,12 @@
 import streamlit as st
 from openai import OpenAI
 import os
-from data_processing import get_chroma_index_for_pdf, create_educational_vectordb
+from data_processing import get_chroma_index_for_pdf, create_educational_vectordb, is_topic_nlp
 from chatbot import process_chat_message
 from study_materials import generate_study_materials, generate_downloads
 import re
+from test import conduct_rouge_tests
+import time
 
 def initialize_session_state():
     if "openai_api_key" not in st.session_state:
@@ -161,6 +163,7 @@ def main():
                     with st.chat_message("assistant"):
                         message_placeholder = st.empty()
                         full_response = ""
+                        start_time = time.time()
                         
                         for response in client.chat.completions.create(
                             model="gpt-4o",
@@ -174,35 +177,45 @@ def main():
                             if response.choices[0].delta.content is not None:
                                 full_response += response.choices[0].delta.content
                                 message_placeholder.markdown(full_response + "▌")
+                                end_time = time.time()
+                                print(f"Time taken for the response: {end_time - start_time:.2f} seconds")
                         
                         message_placeholder.markdown(full_response)
                         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+                    
+
+            # To run rouge tests, delete #
+            #conduct_rouge_tests(vectordb, client)   
     
     with tab2:
         # Study material generation interface
         topic = st.text_input("Enter the NLP-related topic you want to create materials for:")
+        start_time = time.time()
+
         if st.button("Generate Materials", type="primary"):
             if not topic:
                 st.warning("Please enter a topic first.")
-            elif not is_nlp_topic(topic):
-                st.error("""
-                The topic you entered doesn't appear to be related to Natural Language Processing (NLP).
-                
-                Please enter a topic related to:
-                - Natural Language Processing concepts
-                - Computational Linguistics
-                - Text Analysis and Processing
-                - Language Models and Understanding
-                - Machine Translation
-                - Speech Recognition
-                - Text Classification
-                - And other NLP-related areas
-                """)
+            elif not is_topic_nlp(topic):
+                st.error(
+                    """The topic you entered doesn't appear to be related to Natural Language Processing (NLP).
+                    Please enter a topic related to:
+                    - Natural Language Processing concepts
+                        - Computational Linguistics
+                        - Text Analysis and Processing
+                        - Language Models and Understanding
+                        - Machine Translation
+                        - Speech Recognition
+                        - Text Classification
+                        - And other NLP-related areas
+                        """)
             else:
                 with st.spinner("Generating materials... This might take up to 1 minute. Please be patient 😇"):
                     content = generate_study_materials(vectordb, topic, client)
                     if content:
-                        generate_downloads(content)
+                        generate_downloads(content) 
+
+        end_time = time.time()
+        print(f"Time taken for generating learning materials: {end_time - start_time:.2f} seconds")                   
 
 def process_uploads(pdf_files):
     # Initialize with hardcoded document

@@ -146,6 +146,56 @@ def get_chroma_index_for_pdf(files, filenames, openai_api_key: str, persist_dire
         
     return vectordb, flagged_files, successful_files
 
+nlp_keywords = {
+    "tokenization", "linguistics", "language", "parsing", "syntax", "semantic",
+    "semantics", "nlp", "natural language processing", "computational linguistics",
+    "text analysis", "language model", "machine translation", "translation",
+    "sentiment analysis", "named entity recognition", "part of speech", "sentiment",
+    "morphology", "phonetics", "phonology", "pragmatics", "corpus", "recognition",
+    "machine learning", "deep learning", "text classification", "learning",
+    "speech recognition", "text generation", "information extraction", "extraction",
+    "word embeddings", "language understanding", "text summarization", "text",
+    "question answering", "topic modeling", "text mining", "semantic analysis",
+    "syntactic analysis", "corpus linguistics", "discourse analysis", "machine",
+    "morphological analysis", "part of speech tagging", "dependency parsing",
+    "transformer models", "bert", "gpt", "word2vec", "language representation",
+    "text preprocessing", "sequence labeling", "neural networks", "lemmatization", 
+    "language generation", "text similarity", "document classification", "information retrieval",
+    "natural language understanding", "contextual embeddings", "dialog systems",
+    "zero-shot learning", "few-shot learning", "transfer learning",
+    "adversarial examples", "attention mechanisms", "vector space models",
+    "knowledge graphs", "semantic web", "asr", "automatic speech recognition",
+    "ocr", "optical character recognition", "nlp pipelines", "pipelines", "fine-tuning",
+    "data augmentation", "feature extraction", "anaphora resolution",
+    "coreference resolution", "cross-lingual models", "multilingual models",
+    "word sense disambiguation", "language identification", "semantic role labeling", 
+    "stop word removal", "tf-idf", "n-grams", "bag-of-words", "sequence-to-sequence models",
+    "pre-trained models", "recurrent neural networks", "long short-term memory networks",
+    "automatic text generation", "speech synthesis", "interactive ai", "lexical semantics", 
+    "natural language generation", "constituency", "recursion", "discreteness",
+    "productivity", "arbitrariness", "reliance on context", "variability",
+    "descriptive approach", "defining language", "diversity of linguistics",
+    "articulatory phonetics", "vocal tract", "articulation", 
+    "manners of articulation", "transcription", "consonants", "vowels",
+    "suprasegmentals", "length", "tone", "intonation", "syllable structure", 
+    "stress", "acoustic phonetics", "sound waves", "hearing", 
+    "measuring speech", "phonemes", "allophones", "phonotactics",
+    "alternation", "phonological alternations", "morphemes",
+    "affixation", "reduplication", "ablaut", "suppletion", 
+    "derivation", "inflection", "projection", "merger",
+    "adjunction", "movement", "binding theory", "head-complement order",
+    "thematic roles", "lexical semantics", "logical words", 
+    "quantification", "indexicality", "context-dependency", "anaphora",
+    "presupposition", "gricean maxims", "implicature", 
+    "speech acts", "narratives", "participation frameworks",
+    "adjacency pairs", "discourse markers", "language acquisition",
+    "critical period hypothesis", "first language acquisition", 
+    "second language acquisition", "bilingualism", "code-switching",
+    "neurolinguistics", "psycholinguistics", "parsing strategies",
+    "syntactic ambiguity", "semantic ambiguity", "pragmatic inference",
+    "collocations", "finite state automata", "context-free grammar"
+}
+
 def is_nlp_relevant(text_pages: List[Tuple[str, int]]) -> bool:
     """
     Check if document contains NLP-relevant content.
@@ -156,16 +206,16 @@ def is_nlp_relevant(text_pages: List[Tuple[str, int]]) -> bool:
     Returns:
         Boolean indicating if content is NLP-relevant
     """
-    nlp_keywords = {
-        "tokenization", "linguistics", "language", "parsing", "syntax", 
-        "semantics", "nlp", "natural language processing", "computational linguistics",
-        "text analysis", "language model", "machine translation", 
-        "sentiment analysis", "named entity recognition", "part of speech",
-        "morphology", "phonetics", "phonology", "pragmatics", "corpus"
-    }
     
     for text, _ in text_pages:
         text_lower = text.lower()
         if any(keyword in text_lower for keyword in nlp_keywords):
             return True
+    return False
+
+def is_topic_nlp(user_input: str) -> bool:
+    input_words = set(user_input.lower().split())  # Split input into individual words and normalize to lowercase
+
+    if input_words & nlp_keywords: # Intersection of two sets
+        return True
     return False
